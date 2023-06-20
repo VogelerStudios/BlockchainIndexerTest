@@ -20,8 +20,7 @@ class Collection {
     churn: number;
   };
   holdTimeByOwner: {
-    wallet: string;
-    holdTime: number;
+    [wallet: string]: { [tokenId: string]: number };
   };
 
   constructor(data) {
@@ -82,24 +81,34 @@ class Collection {
     return totalChurn / counter;
   }
 
-  calcualateHoldTime() {
+  calculateHoldTime() {
     // go through transactions, add buys
     for (const transaction of this.transactions) {
-      const { address: toAddress, time } = transaction;
-      this.holdTimeByOwner[toAddress] = time;
+      const { address: toAddress, time, tokenId } = transaction;
+      if (!this.holdTimeByOwner[toAddress]) {
+        this.holdTimeByOwner[toAddress] = {};
+      }
+      this.holdTimeByOwner[toAddress][tokenId] = time;
     }
 
     // go through transactions, substract sells
     // Note, we could probably do this in one run, but doing it this way to put together an MVP.
     // Still O(n) time complexity
     for (const transaction of this.transactions) {
-      const { fromAddress, time } = transaction;
-      const heldTime = time - this.holdTimeByOwner[fromAddress];
-      this.holdTimeByOwner[fromAddress] = heldTime > 0 ? heldTime : 0;
+      const { fromAddress, time, tokenId } = transaction;
+      if (
+        this.holdTimeByOwner[fromAddress] &&
+        this.holdTimeByOwner[fromAddress][tokenId]
+      ) {
+        const purchaseTime = this.holdTimeByOwner[fromAddress][tokenId];
+        const holdTime = time - purchaseTime;
+        this.holdTimeByOwner[fromAddress][tokenId] =
+          holdTime > 0 ? holdTime : 0;
+      }
     }
   }
 
-  getHoldTimeByWallet(wallet) {
+  getTokensHoldTimeByWallet(wallet) {
     return this.holdTimeByOwner[wallet];
   }
 

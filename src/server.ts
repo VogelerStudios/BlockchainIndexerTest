@@ -19,8 +19,6 @@ const sequelize = new Sequelize({
 // Uncomment this if you want to create the User table
 // initUser(sequelize)
 
-const sequelizeReady = sequelize.sync({ alter: true });
-
 const app = express();
 
 app.get("/", async (req, res) => {
@@ -34,10 +32,10 @@ app.get("/", async (req, res) => {
   const churnAvg = collection.getAverageChurnRate();
   console.log("churnAvg: ", churnAvg);
 
-  collection.calcualateHoldTime();
+  collection.calculateHoldTime();
   // test wallet:
   const testWallet = "0x0335464fb52792d7301961e491a4f92b3023039e";
-  const holdTimeByWalletTest = collection.getHoldTimeByWallet(testWallet);
+  const holdTimeByWalletTest = collection.getTokensHoldTimeByWallet(testWallet);
   console.log("holdTimeByWalletTest: ", holdTimeByWalletTest);
   const holdTimeAvg = collection.getAverageHoldTime();
   console.log("holdTimeAvg: ", holdTimeAvg);
