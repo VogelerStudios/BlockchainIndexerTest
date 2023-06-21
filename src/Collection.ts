@@ -106,6 +106,27 @@ class Collection {
           holdTime > 0 ? holdTime : 0;
       }
     }
+
+    // filter out tokens that are still held by owner
+    // by checking if the holdTimeByOwner's time is still the purchase time
+    for (const wallet in this.holdTimeByOwner) {
+      for (const tokenId in this.holdTimeByOwner[wallet]) {
+        const tokenTransaction = this.transactions.find(
+          (transaction) =>
+            transaction.tokenId === tokenId && transaction.address === wallet
+        );
+        if (
+          tokenTransaction &&
+          this.holdTimeByOwner[wallet][tokenId] === tokenTransaction.time
+        ) {
+          delete this.holdTimeByOwner[wallet][tokenId];
+        }
+      }
+      // Remove the owner if he/she has no tokens left
+      if (Object.keys(this.holdTimeByOwner[wallet]).length === 0) {
+        delete this.holdTimeByOwner[wallet];
+      }
+    }
   }
 
   getTokensHoldTimeByWallet(wallet) {
@@ -115,12 +136,14 @@ class Collection {
   getAverageHoldTime() {
     let counter = 0;
     let totalHoldTime = 0;
-    for (const [wallet, holdTime] of Object.entries(this.holdTimeByOwner)) {
-      totalHoldTime += holdTime;
-      counter++;
+    for (const wallet in this.holdTimeByOwner) {
+      for (const tokenId in this.holdTimeByOwner[wallet]) {
+        totalHoldTime += this.holdTimeByOwner[wallet][tokenId];
+        counter++;
+      }
     }
 
-    return Math.floor(totalHoldTime / counter);
+    return counter !== 0 ? Math.floor(totalHoldTime / counter) : 0;
   }
 }
 
